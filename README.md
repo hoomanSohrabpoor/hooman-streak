@@ -10,7 +10,7 @@ It runs on [Scriptable](https://scriptable.app), so it needs no Mac, no Xcode an
 - **Progress ring.** Fills as tasks are ticked. Timed tasks fill it gradually as you work.
 - **Task timers.** Tap ▶️ on the widget to start a countdown that ticks live on the home screen. Pause and resume any time; when it reaches zero, the task ticks itself.
 - **Reminders that escalate.** Morning, afternoon, and an evening "your streak is at risk" warning. They stop for the day once everything is done.
-- **A nudge until you start.** A red line on the widget stays there until the day's first timer or tick.
+- **A daily quote until you start.** A short motivational line, a new one each day, stays on the widget until the day's first timer or tick.
 - **In-app settings.** Add, rename, reorder or delete tasks, set timers, choose how many tasks keep the streak alive, and edit reminder times.
 - **Home screen and lock screen.** Small and medium home screen widgets, plus circular, rectangular and inline lock screen widgets.
 - **Last 7 days** at a glance on the medium widget.
@@ -31,7 +31,7 @@ It runs on [Scriptable](https://scriptable.app), so it needs no Mac, no Xcode an
 - **Tap anywhere else** on the widget to open the checklist. Tap a task to tick or untick it.
 - **⚙️ Settings** at the bottom of the checklist edits tasks, timers, the daily goal and reminders.
 
-The name shown on the widget and in notifications, the nudge text and the level thresholds are set at the top of the script.
+The name shown on the widget and in notifications, the daily quotes and the level thresholds are set at the top of the script.
 
 ## How it works
 
@@ -61,7 +61,7 @@ Scriptable only runs on iOS, so the tests run the widget in Node.js against a fa
 npm test
 ```
 
-18 test scenarios, no dependencies (Node.js 18+).
+19 test scenarios, no dependencies (Node.js 18+).
 
 ## Built with AI
 

@@ -126,7 +126,7 @@ function makeEnv({ data, family = "medium", inWidget = true, steps = [], answers
 
 async function run(env) {
   const names = Object.keys(env.globals)
-  const fn = new AsyncFunction(...names, src + "\nreturn { currentStreak, summary, dayKey, addDays, applySettings, NOT_STARTED_MESSAGE, get TASKS() { return TASKS } }")
+  const fn = new AsyncFunction(...names, src + "\nreturn { currentStreak, summary, dayKey, addDays, applySettings, todaysQuote, DAILY_QUOTES, get TASKS() { return TASKS } }")
   return fn(...names.map((n) => env.globals[n]))
 }
 
@@ -236,18 +236,18 @@ for (const timer of [null, { taskId: "fastapi", day: todayKey(), startedAt: Date
   for (const text of shown) assert.doesNotMatch(text, /[؀-ۿ]/, text)
 }
 
-// 10. The red sentence shows until something is started, then disappears
+// 10. The daily quote shows until something is started, then disappears
 {
   let env = makeEnv({ inWidget: false })
   const api = await run(env)
-  assert.equal(env.table.rows[0].cells[0].subtitle, api.NOT_STARTED_MESSAGE)
+  assert.equal(env.table.rows[0].cells[0].subtitle, api.todaysQuote())
   env = makeEnv({ inWidget: false, query: { action: "timer", task: "fastapi" } })
   await run(env)
-  assert.notEqual(env.table.rows[0].cells[0].subtitle, api.NOT_STARTED_MESSAGE)
+  assert.notEqual(env.table.rows[0].cells[0].subtitle, api.todaysQuote())
   const paused = { ...env.saved, timer: null, seconds: { [todayKey()]: { fastapi: 60 } } }
   env = makeEnv({ inWidget: false, data: paused })
   await run(env)
-  assert.notEqual(env.table.rows[0].cells[0].subtitle, api.NOT_STARTED_MESSAGE, "banked time counts as started")
+  assert.notEqual(env.table.rows[0].cells[0].subtitle, api.todaysQuote(), "banked time counts as started")
 }
 
 // 11. The ring counts timer time: 1 of 2 hours on FastAPI = a quarter of the day's goal
@@ -369,6 +369,17 @@ for (const timer of [null, { taskId: "fastapi", day: todayKey(), startedAt: Date
   await run(env)
   assert.equal(env.saved.settings, null)
   assert.equal(env.tables[0].titles().filter((t) => /Gym/.test(t)).length, 0)
+}
+
+// 19. Quotes: one per day, the same all day, short enough for the small widget
+{
+  const api = await run(makeEnv())
+  const morning = new Date(2026, 10, 11, 0, 1), night = new Date(2026, 10, 11, 23, 59)
+  assert.equal(api.todaysQuote(morning), api.todaysQuote(night), "same quote all day")
+  assert.notEqual(api.todaysQuote(night), api.todaysQuote(new Date(2026, 10, 12, 0, 1)), "new quote after midnight")
+  const month = new Set(Array.from({ length: api.DAILY_QUOTES.length }, (_, i) => api.todaysQuote(new Date(2026, 0, 1 + i))))
+  assert.equal(month.size, api.DAILY_QUOTES.length, "every quote gets its day")
+  for (const q of api.DAILY_QUOTES) assert.ok(q.length <= 40, `too long for the widget: ${q}`)
 }
 
 console.log("all widget tests passed")

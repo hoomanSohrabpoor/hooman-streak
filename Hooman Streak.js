@@ -24,8 +24,41 @@ const DEFAULT_REMINDERS = [
   { hour: 21, minute: 30 },
 ]
 
-// Shown in red until you start something that day (start a timer or tick a task)
-const NOT_STARTED_MESSAGE = "Just start your learning."
+// One line a day, shown until you start something (start a timer or tick a task).
+// The same line stays all day and the next one appears after midnight.
+const DAILY_QUOTES = [
+  "Small steps, every single day.",
+  "Start now. Perfect it later.",
+  "Discipline beats motivation.",
+  "One hour today beats ten someday.",
+  "Your future self is watching.",
+  "Done is better than perfect.",
+  "Showing up is the hard part.",
+  "Consistency compounds.",
+  "Code a little, learn a lot.",
+  "Every expert was once a beginner.",
+  "Don't break the chain.",
+  "Progress, not perfection.",
+  "The best time to start is now.",
+  "Make today count.",
+  "Read one page. Then another.",
+  "Hard now, easy later.",
+  "Just take the next small step.",
+  "You don't need more time. Just start.",
+  "Learn it today, use it tomorrow.",
+  "Momentum starts with one task.",
+  "Ship something today.",
+  "Be stubborn about your goals.",
+  "Ten minutes is enough to begin.",
+  "Effort today, results tomorrow.",
+  "Your streak is waiting for you.",
+  "Bugs today, skills tomorrow.",
+  "One more chapter, one more commit.",
+  "Keep the flame alive.",
+  "Practice makes progress.",
+  "Start before you feel ready.",
+  "Turn \"later\" into \"now\".",
+]
 
 // Streak levels: the flame and ring take the color of the level you've reached
 const LEVELS = [
@@ -59,7 +92,6 @@ const COLORS = {
   muted: new Color("#52656D"),
   text: Color.white(),
   sub: new Color("#AFC2CA"),
-  alert: new Color("#FF4B4B"),
 }
 LEVELS.sort((a, b) => a.days - b.days)
 const WEEKDAY_INITIALS = ["S", "M", "T", "W", "T", "F", "S"] // Date.getDay(): Sunday..Saturday
@@ -442,10 +474,16 @@ function addFlameRing(parent, s, lv, size) {
   return ring
 }
 
-function addNag(stack, size) {
-  const nag = addLabel(stack, NOT_STARTED_MESSAGE, size, COLORS.alert, true)
-  nag.lineLimit = 2
-  return nag
+// Days since 1970 in local time, so the quote changes at the user's midnight
+function todaysQuote(now = new Date()) {
+  const day = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 86400000)
+  return DAILY_QUOTES[day % DAILY_QUOTES.length]
+}
+
+function addQuote(stack, size) {
+  const quote = addLabel(stack, todaysQuote(), size, COLORS.flame, true)
+  quote.lineLimit = 2
+  return quote
 }
 
 function statusText(s) {
@@ -479,7 +517,7 @@ function buildSmall(widget, data, s) {
     status.addSpacer(4)
     addCountdown(status, end, 15, lv.color)
   } else if (!s.started) {
-    addNag(status, 11).centerAlignText()
+    addQuote(status, 11).centerAlignText()
   } else {
     addLabel(status, statusText(s), 12, s.complete ? COLORS.done : COLORS.text, true)
   }
@@ -538,7 +576,7 @@ function buildMedium(widget, data, s, maxTasks) {
   if (TASKS.length > maxTasks) {
     addLabel(list, `and ${plural(TASKS.length - maxTasks, "more task")}`, 11, COLORS.sub)
   }
-  if (!s.started) addNag(list, 11)
+  if (!s.started) addQuote(list, 11)
 
   widget.addSpacer()
 
@@ -562,7 +600,7 @@ function buildMedium(widget, data, s, maxTasks) {
 function buildAccessory(widget, data, s, family) {
   const end = timerEnd(data)
   if (family === "accessoryInline") {
-    const status = end ? `⏱ until ${formatClock(end)}` : s.started ? statusText(s) : NOT_STARTED_MESSAGE
+    const status = end ? `⏱ until ${formatClock(end)}` : s.started ? statusText(s) : todaysQuote()
     widget.addText(`🔥 ${s.streak}  ${status}`)
     return
   }
@@ -584,7 +622,7 @@ function buildAccessory(widget, data, s, family) {
     addLabel(status, "⏱ ", 12, Color.white())
     addCountdown(status, end, 12, Color.white())
   } else {
-    addLabel(widget, s.started ? statusText(s) : NOT_STARTED_MESSAGE, 12, Color.white())
+    addLabel(widget, s.started ? statusText(s) : todaysQuote(), 12, Color.white())
   }
   widget.addSpacer(4)
   const bar = widget.addImage(progressBar(s.done / GOAL, 140, 6, Color.white()))
@@ -660,12 +698,12 @@ async function showChecklist(data) {
     header.height = 90
     const subtitle = s.complete
       ? `Done for today. Great job, ${OWNER_NAME}! 🎉`
-      : s.started ? `${OWNER_NAME}'s daily · ${plural(s.left, "task")} left` : NOT_STARTED_MESSAGE
+      : s.started ? `${OWNER_NAME}'s daily · ${plural(s.left, "task")} left` : todaysQuote()
     const title = header.addText(`🔥 ${s.streak}-day streak`, subtitle)
     title.titleFont = Font.heavySystemFont(22)
     title.subtitleFont = Font.mediumSystemFont(14)
     title.titleColor = lv.color
-    if (!s.started) title.subtitleColor = COLORS.alert
+    if (!s.started) title.subtitleColor = COLORS.flame
     table.addRow(header)
 
     const levelRow = new UITableRow()
@@ -958,7 +996,7 @@ async function showSettings(data) {
 // ---------- reminders ----------
 
 function reminderBody(today, isLast) {
-  if (today && !today.started && !isLast) return NOT_STARTED_MESSAGE
+  if (today && !today.started && !isLast) return todaysQuote()
   const left = plural(today ? today.left : GOAL, "task")
   if (isLast) {
     return today && today.streak > 0
