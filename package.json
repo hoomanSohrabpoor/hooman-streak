@@ -1,0 +1,8 @@
+{
+  "name": "hooman-streak",
+  "private": true,
+  "description": "A Duolingo-style streak widget for iPhone, built with Scriptable",
+  "scripts": {
+    "test": "node tests/widget.test.mjs"
+  }
+}
