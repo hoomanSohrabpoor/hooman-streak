@@ -4,6 +4,14 @@ A Duolingo-style streak widget for iPhone that keeps me working on my daily goal
 
 It runs on [Scriptable](https://scriptable.app), so it needs no Mac, no Xcode and no App Store account.
 
+<p align="center">
+  <img src="docs/home-widget.png" alt="Home screen widget with a 2-day streak and the FastAPI timer counting down" width="260">
+</p>
+<p align="center">
+  <img src="docs/lock-screen.png" alt="Lock screen widgets showing the streak and the live timer" width="420">
+</p>
+<p align="center"><em>Home screen and lock screen, with the FastAPI timer counting down live.</em></p>
+
 ## Features
 
 - **Streak with levels.** The flame and progress ring change color as the streak grows: orange (Spark), blue at 7 days (Week Warrior), purple at 30 (Monthly Master), gold at 100 (Legend). Each new level sends a notification.
