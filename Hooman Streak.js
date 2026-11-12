@@ -283,12 +283,12 @@ function summary(data, now = new Date()) {
 }
 
 // Notify once when the streak reaches a new level
-function checkLevelUp(data) {
+function checkLevelUp(data, notify = true) {
   const s = summary(data)
   const lv = level(s.streak)
   const previous = data.level
   data.level = lv.index
-  if (previous === null || lv.index <= previous) return
+  if (!notify || previous === null || lv.index <= previous) return
   const n = new Notification()
   // A separate prefix, so re-planning the reminders never cancels it
   n.identifier = `habit-level-${lv.index}-${s.key}`
@@ -1054,21 +1054,22 @@ async function scheduleReminders(data) {
   }
 }
 
-function tryLevelUp(data) {
+function tryLevelUp(data, notify) {
   try {
-    checkLevelUp(data)
+    checkLevelUp(data, notify)
   } catch (e) {
     console.log(`could not send level-up notification: ${e}`)
   }
 }
 
-// Bring the derived state up to date; returns true if anything changed
-function refresh(data) {
+// Bring the derived state up to date; returns true if anything changed.
+// With notify = false it's a dry run that sends no level-up notification.
+function refresh(data, notify = true) {
   const before = JSON.stringify(data)
   const timerDay = data.timer && data.timer.day
   if (settleTimer(data) && timerDay) recordDay(data, timerDay)
   recordDay(data, dayKey(new Date()))
-  tryLevelUp(data)
+  tryLevelUp(data, notify)
   return JSON.stringify(data) !== before
 }
 
@@ -1084,9 +1085,15 @@ async function commit(data) {
 
 // ---------- run ----------
 
-const data = await loadData()
+let data = await loadData()
 if (config.runsInWidget) {
-  if (refresh(data)) saveData(data)
+  // Dry run on a copy: only touch the file when something actually changes
+  if (refresh(JSON.parse(JSON.stringify(data)), false)) {
+    // Re-read right before writing, so a tick the app saved a moment ago isn't overwritten
+    data = await loadData()
+    refresh(data)
+    saveData(data)
+  }
   Script.setWidget(createWidget(data, config.widgetFamily))
   try {
     await scheduleReminders(data)

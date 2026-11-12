@@ -1,8 +1,10 @@
 # Hooman Streak 🔥
 
-A Duolingo-style streak widget for iPhone that keeps me working on my daily goals: two hours of FastAPI practice and reading English books.
+A Duolingo-style streak widget for iPhone. I built it for my own daily plan: two hours of FastAPI practice and some English reading, every day. It keeps a streak, runs a timer for the FastAPI session, and nudges me with a daily quote until I start.
 
-It runs on [Scriptable](https://scriptable.app), so it needs no Mac, no Xcode and no App Store account.
+It's a single JavaScript file for [Scriptable](https://scriptable.app), so it needs no Mac, no Xcode and no App Store account. I'm sharing it so anyone can read through the code and see how it works; the [How it works](#how-it-works) section is a good place to start.
+
+Everything stays on the phone: no accounts, no servers, no network requests.
 
 <p align="center">
   <img src="docs/home-widget.png" alt="Home screen widget with a 2-day streak and the FastAPI timer counting down" width="260">
@@ -16,7 +18,7 @@ It runs on [Scriptable](https://scriptable.app), so it needs no Mac, no Xcode an
 
 - **Streak with levels.** The flame and progress ring change color as the streak grows: orange (Spark), blue at 7 days (Week Warrior), purple at 30 (Monthly Master), gold at 100 (Legend). Each new level sends a notification.
 - **Progress ring.** Fills as tasks are ticked. Timed tasks fill it gradually as you work.
-- **Task timers.** Tap ▶️ on the widget to start a countdown that ticks live on the home screen. Pause and resume any time; when it reaches zero, the task ticks itself.
+- **Task timers.** Start a countdown from the checklist, or with the ▶️ button on the medium widget. It ticks live on the home screen and lock screen. Pause and resume any time; when it reaches zero, the task ticks itself.
 - **Reminders that escalate.** Morning, afternoon, and an evening "your streak is at risk" warning. They stop for the day once everything is done.
 - **A daily quote until you start.** A short motivational line, a new one each day, stays on the widget until the day's first timer or tick.
 - **In-app settings.** Add, rename, reorder or delete tasks, set timers, choose how many tasks keep the streak alive, and edit reminder times.
@@ -35,8 +37,8 @@ It runs on [Scriptable](https://scriptable.app), so it needs no Mac, no Xcode an
 
 ## Usage
 
-- **Tap a timed task's line** on the widget to start or pause its timer.
-- **Tap anywhere else** on the widget to open the checklist. Tap a task to tick or untick it.
+- **Tap the widget** to open the checklist. Tap a task to tick or untick it, or to start, pause or finish its timer.
+- **On the medium and large widgets**, a timed task has its own ▶️ button that starts or pauses the timer directly.
 - **⚙️ Settings** at the bottom of the checklist edits tasks, timers, the daily goal and reminders.
 
 The name shown on the widget and in notifications, the daily quotes and the level thresholds are set at the top of the script.
@@ -59,6 +61,7 @@ A few design decisions worth noting:
 - **History is frozen per day.** Each day's result is recorded under the tasks that existed that day. Adding a new task later doesn't turn past days incomplete and break the streak.
 - **A timer that crosses midnight** credits the day it was started.
 - **Like Duolingo, today doesn't break the streak until midnight.** An unfinished today still shows yesterday's streak.
+- **The widget never overwrites the app.** The widget and the app share one file. The widget saves only when something actually changed, and re-reads the file right before writing, so a tick made in the app a moment earlier is never lost.
 - **Reminders are re-planned on every run** for the next few days (iOS allows at most 64 pending notifications), and today's are dropped once the day is complete.
 
 ## Tests
@@ -69,7 +72,7 @@ Scriptable only runs on iOS, so the tests run the widget in Node.js against a fa
 npm test
 ```
 
-19 test scenarios, no dependencies (Node.js 18+).
+20 test scenarios, no dependencies (Node.js 18+).
 
 ## Built with AI
 

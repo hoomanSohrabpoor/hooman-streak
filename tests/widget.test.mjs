@@ -32,7 +32,7 @@ function todayKey(offsetDays = 0) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
 }
 
-function makeEnv({ data, family = "medium", inWidget = true, steps = [], answers = [], query = {} } = {}) {
+function makeEnv({ data, family = "medium", inWidget = true, steps = [], answers = [], query = {}, staleReads = [] } = {}) {
   steps = [...steps]
   answers = [...answers]
   const scheduled = []
@@ -43,7 +43,8 @@ function makeEnv({ data, family = "medium", inWidget = true, steps = [], answers
     fileExists: (p) => p in store,
     isFileStoredIniCloud: () => false,
     downloadFileFromiCloud: async () => {},
-    readString: (p) => store[p],
+    // staleReads simulates another process saving in between: early reads return older content
+    readString: (p) => (staleReads.length ? staleReads.shift() : store[p]),
     writeString: (p, s) => { store[p] = s },
   }
   class Notification {
@@ -380,6 +381,19 @@ for (const timer of [null, { taskId: "fastapi", day: todayKey(), startedAt: Date
   const month = new Set(Array.from({ length: api.DAILY_QUOTES.length }, (_, i) => api.todaysQuote(new Date(2026, 0, 1 + i))))
   assert.equal(month.size, api.DAILY_QUOTES.length, "every quote gets its day")
   for (const q of api.DAILY_QUOTES) assert.ok(q.length <= 40, `too long for the widget: ${q}`)
+}
+
+// 20. The widget never overwrites a tick the app saved while the widget was refreshing
+{
+  // On disk: the app just ticked English. The widget's first read still saw the older file,
+  // where the FastAPI timer had run out (so the widget has something to save).
+  const timer = { taskId: "fastapi", day: todayKey(), startedAt: Date.now() - 3 * HOUR }
+  const older = { days: {}, timer }
+  const current = { days: { [todayKey()]: ["english"] }, timer }
+  const env = makeEnv({ data: current, staleReads: [JSON.stringify(older)] })
+  await run(env)
+  assert.deepEqual(env.saved.days[todayKey()].sort(), ["english", "fastapi"], "both the app's tick and the timer's tick survive")
+  assert.equal(env.saved.complete[todayKey()], true)
 }
 
 console.log("all widget tests passed")
